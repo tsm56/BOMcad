@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TitanCAD Analyzer - Engineering Metrology System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Toolbar Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo-icon"><i class="fa-solid fa-cube"></i></div>
+                <div class="brand-text">
+                    <h1>TitanCAD</h1>
+                    <span>ENGINEERING METROLOGY SYSTEM</span>
+                </div>
+            </div>
+            
+            <div class="header-status">
+                <i class="fa-solid fa-file-invoice"></i>
+                <span id="active-file-label">No Active CAD Model Loaded</span>
+                <span id="active-format-badge" class="badge format-badge" style="display:none;">STEP</span>
+            </div>
+            
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="btn-toggle-dashboard">
+                    <i class="fa-solid fa-chart-pie"></i> Metrics Dashboard
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" id="btn-export-dropdown">
+                        <i class="fa-solid fa-download"></i> Export Data
+                    </button>
+                    <div class="dropdown-menu" id="export-dropdown-menu">
+                        <a href="#" id="export-csv"><i class="fa-solid fa-file-csv"></i> Download CSV (BOM)</a>
+                        <a href="#" id="export-excel"><i class="fa-solid fa-file-excel"></i> Download Excel Sheet</a>
+                        <a href="#" id="export-pdf"><i class="fa-solid fa-file-pdf"></i> Download PDF Report</a>
+                        <a href="#" id="export-json"><i class="fa-solid fa-file-code"></i> Download Raw JSON</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <div class="workspace-layout">
+            <!-- Left Sidebar: File Input & Hierarchy Tree -->
+            <aside class="sidebar sidebar-left">
+                <!-- File upload box -->
+                <div class="sidebar-section file-upload-section">
+                    <h3 class="section-title"><i class="fa-solid fa-file-import"></i> Upload Model</h3>
+                    <div class="dropzone" id="file-dropzone">
+                        <input type="file" id="file-input" accept=".step,.stp,.iges,.igs,.stl,.obj,.gltf,.glb" style="display:none;">
+                        <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                        <p class="dropzone-text">Drag & drop CAD/Mesh file here</p>
+                        <span class="dropzone-subtext">Supports STEP, IGES, STL, OBJ, GLTF/GLB</span>
+                        <button class="btn btn-secondary btn-sm" id="btn-browse-files">Browse Files</button>
+                    </div>
+                    <div class="upload-progress-container" id="upload-progress" style="display:none;">
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar-fill" id="upload-progress-fill" style="width: 0%"></div>
+                        </div>
+                        <span class="progress-bar-text" id="upload-progress-text">Uploading: 0%</span>
+                    </div>
+                </div>
+
+                <!-- Tree structure -->
+                <div class="sidebar-section tree-section">
+                    <h3 class="section-title"><i class="fa-solid fa-folder-tree"></i> Assembly Tree</h3>
+                    <div class="tree-container" id="assembly-tree">
+                        <div class="tree-empty-state">
+                            <i class="fa-solid fa-network-wired"></i>
+                            <p>Upload a model to inspect structure</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Panel: WebGL Viewer -->
+            <main class="center-viewport">
+                <!-- Three.js Canvas container -->
+                <div id="viewer-container">
+                    <canvas id="three-canvas"></canvas>
+                    
+                    <!-- Floating Viewer Controls (Left Top overlay) -->
+                    <div class="floating-controls camera-controls">
+                        <button class="control-btn" id="view-orbit" title="Orbit Control"><i class="fa-solid fa-rotate"></i></button>
+                        <button class="control-btn" id="view-ortho" title="Toggle Ortho/Perspective"><i class="fa-solid fa-eye"></i></button>
+                        <button class="control-btn" id="view-fit" title="Zoom to Fit"><i class="fa-solid fa-expand"></i></button>
+                        <div class="control-divider"></div>
+                        <button class="control-btn active" id="shade-shaded" title="Shaded Mode"><i class="fa-solid fa-circle"></i></button>
+                        <button class="control-btn" id="shade-wireframe" title="Wireframe Mode"><i class="fa-solid fa-border-all"></i></button>
+                        <button class="control-btn" id="shade-transparent" title="X-Ray Mode"><i class="fa-solid fa-ghost"></i></button>
+                        <div class="control-divider"></div>
+                        <button class="control-btn" id="tool-bg-toggle" title="Change Background Style"><i class="fa-solid fa-palette"></i></button>
+                        <button class="control-btn" id="tool-measure" title="Measure Point-to-Point Mode"><i class="fa-solid fa-ruler"></i></button>
+                    </div>
+
+                    <!-- Floating Measurement Panel (Left Bottom overlay) -->
+                    <div class="floating-controls measurement-panel" id="measurement-panel" style="display:none;">
+                        <div class="measurement-header">
+                            <span><i class="fa-solid fa-ruler-combined"></i> 3D Distance Measurement</span>
+                            <button class="measurement-clear-btn" id="btn-clear-measurement" title="Clear Points"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="measurement-body">
+                            <div class="point-coord">
+                                <strong>Point A:</strong>
+                                <span id="measure-p1">Click on model...</span>
+                            </div>
+                            <div class="point-coord">
+                                <strong>Point B:</strong>
+                                <span id="measure-p2">Click on model...</span>
+                            </div>
+                            <div class="measurement-result">
+                                <div class="result-row">
+                                    <span class="result-label">Distance:</span>
+                                    <span class="result-val" id="measure-distance">-- mm</span>
+                                </div>
+                                <div class="delta-row">
+                                    <span>ΔX: <span id="measure-dx">--</span> mm</span>
+                                    <span>ΔY: <span id="measure-dy">--</span> mm</span>
+                                    <span>ΔZ: <span id="measure-dz">--</span> mm</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Sliders (Right Bottom overlay) -->
+                    <div class="floating-controls metrology-controls">
+                        <div class="slider-control">
+                            <label><i class="fa-solid fa-boxes-packing"></i> Explode Assembly</label>
+                            <input type="range" id="slider-explode" min="0" max="100" value="0">
+                        </div>
+                        <div class="slider-control">
+                            <label><i class="fa-solid fa-scissors"></i> Cross Section (X-Axis)</label>
+                            <input type="range" id="slider-clipping" min="-100" max="100" value="100">
+                        </div>
+                    </div>
+
+                    <!-- 3D Viewer grid helper overlays -->
+                    <div class="viewer-axes-indicator" id="axes-indicator"></div>
+
+                    <!-- Loading / Parsing Progress Overlay -->
+                    <div class="viewer-overlay" id="loading-overlay" style="display:none;">
+                        <div class="spinner-loader"></div>
+                        <h4 id="loading-status-title">Processing Model</h4>
+                        <p id="loading-status-text">Executing boundary representation tessellation engine...</p>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar: Part Inspector -->
+            <aside class="sidebar sidebar-right">
+                <div class="sidebar-section inspector-section">
+                    <h3 class="section-title"><i class="fa-solid fa-circle-info"></i> Component Inspector</h3>
+                    
+                    <div id="inspector-empty-state" class="inspector-empty">
+                        <i class="fa-solid fa-mouse-pointer"></i>
+                        <p>Select a part in the 3D viewer or parts table to inspect properties</p>
+                    </div>
+
+                    <div id="inspector-card" style="display:none;">
+                        <div class="inspector-part-header">
+                            <span class="part-badge" id="insp-part-index">#1</span>
+                            <h4 id="insp-part-name">Part Name</h4>
+                        </div>
+                        
+                        <div class="inspector-row">
+                            <span class="insp-label">Type:</span>
+                            <span class="insp-value font-mono" id="insp-part-type">Solid</span>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Recalculator Material Section -->
+                        <div class="inspector-section-nested">
+                            <h4 class="nested-title"><i class="fa-solid fa-scale-balanced"></i> Physical Metrics</h4>
+                            <div class="form-group">
+                                <label for="insp-material-select">Assign Material</label>
+                                <select id="insp-material-select" class="form-select">
+                                    <option value="Steel (Low Carbon)">Steel (Low Carbon) [7.85]</option>
+                                    <option value="Stainless Steel (304)">Stainless Steel (304) [8.00]</option>
+                                    <option value="Aluminum (6061-T6)">Aluminum (6061-T6) [2.70]</option>
+                                    <option value="Titanium (Ti-6Al-4V)">Titanium (Ti-6Al-4V) [4.43]</option>
+                                    <option value="Copper">Copper [8.96]</option>
+                                    <option value="Brass">Brass [8.50]</option>
+                                    <option value="PLA (Plastic)">PLA (Plastic) [1.24]</option>
+                                    <option value="ABS (Plastic)">ABS (Plastic) [1.04]</option>
+                                    <option value="Carbon Fiber">Carbon Fiber [1.75]</option>
+                                    <option value="Custom Density">Custom Density</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="custom-density-group" style="display:none;">
+                                <label for="insp-density-input">Custom Density (g/cm³)</label>
+                                <input type="number" id="insp-density-input" class="form-input" min="0.01" max="30" step="0.01" value="1.0">
+                            </div>
+
+                            <button class="btn btn-primary btn-sm btn-block" id="btn-recalculate-weight" style="margin-top:0.75rem;">
+                                <i class="fa-solid fa-arrows-spin"></i> Update Material & Density
+                            </button>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Derived properties list -->
+                        <div class="property-grid">
+                            <div class="property-cell">
+                                <span class="cell-label">Volume</span>
+                                <span class="cell-value" id="insp-volume">0.0</span>
+                                <span class="cell-unit">cm³</span>
+                            </div>
+                            <div class="property-cell">
+                                <span class="cell-label">Surface Area</span>
+                                <span class="cell-value" id="insp-area">0.0</span>
+                                <span class="cell-unit">cm²</span>
+                            </div>
+                            <div class="property-cell">
+                                <span class="cell-label">Calculated Weight</span>
+                                <span class="cell-value highlight" id="insp-mass">0.00</span>
+                                <span class="cell-unit" id="insp-mass-unit">g</span>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="inspector-section-nested">
+                            <h4 class="nested-title"><i class="fa-solid fa-arrows-up-down-left-right"></i> Bounding Box Envelope</h4>
+                            <div class="bbox-grid">
+                                <div class="bbox-cell"><span>X Length:</span> <strong id="insp-bbox-x">0.0</strong> mm</div>
+                                <div class="bbox-cell"><span>Y Width:</span> <strong id="insp-bbox-y">0.0</strong> mm</div>
+                                <div class="bbox-cell"><span>Z Height:</span> <strong id="insp-bbox-z">0.0</strong> mm</div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="inspector-section-nested">
+                            <h4 class="nested-title"><i class="fa-solid fa-crosshairs"></i> Center of Mass</h4>
+                            <div class="bbox-grid font-mono">
+                                <div class="bbox-cell"><span>X:</span> <strong id="insp-com-x">0.0</strong></div>
+                                <div class="bbox-cell"><span>Y:</span> <strong id="insp-com-y">0.0</strong></div>
+                                <div class="bbox-cell"><span>Z:</span> <strong id="insp-com-z">0.0</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="inspector-section-nested">
+                            <h4 class="nested-title"><i class="fa-solid fa-calculator"></i> B-Rep/Mesh Features</h4>
+                            <div class="bbox-grid">
+                                <div class="bbox-cell" id="insp-lbl-faces"><span>Faces:</span> <strong id="insp-faces">0</strong></div>
+                                <div class="bbox-cell" id="insp-lbl-edges"><span>Edges:</span> <strong id="insp-edges">0</strong></div>
+                                <div class="bbox-cell"><span>Vertices:</span> <strong id="insp-vertices">0</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Bottom Panel: Searchable Data Table -->
+        <footer class="bottom-panel">
+            <div class="table-header-toolbar">
+                <div class="table-title">
+                    <h3><i class="fa-solid fa-list-check"></i> Parts Metrology Ledger</h3>
+                    <span class="ledger-count" id="table-parts-count">0 items</span>
+                </div>
+                
+                <div class="table-filters">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="table-search-input" placeholder="Search by name, type, or material...">
+                    </div>
+                    <select id="filter-type-select" class="form-select select-sm">
+                        <option value="all">All Geometry Types</option>
+                        <option value="Solid">Solid (CAD)</option>
+                        <option value="Shell/Surface">Shell/Surface (CAD)</option>
+                        <option value="Polygonal Mesh">Polygonal Mesh</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="table-viewport">
+                <table class="parts-table" id="parts-ledger-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Index</th>
+                            <th>Part Name</th>
+                            <th>Geometry Type</th>
+                            <th>Material</th>
+                            <th>Volume (cm³)</th>
+                            <th>Surface Area (cm²)</th>
+                            <th>Envelope Dims (mm)</th>
+                            <th>Mass (g)</th>
+                            <th>COM X,Y,Z (mm)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="parts-ledger-tbody">
+                        <tr>
+                            <td colspan="9" class="table-empty-row">
+                                <i class="fa-solid fa-hourglass-empty"></i>
+                                <p>No records loaded. Please upload a model to populate the ledger.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-pagination" id="table-pagination" style="display:none;">
+                <div class="pagination-info">Showing <span id="pagin-start">1</span> to <span id="pagin-end">10</span> of <span id="pagin-total">10</span> elements</div>
+                <div class="pagination-buttons">
+                    <button class="btn btn-secondary btn-xs" id="pagin-prev-btn" disabled><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                    <button class="btn btn-secondary btn-xs" id="pagin-next-btn"><i class="fa-solid fa-chevron-right"></i> Next</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Metrics Dashboard Modal Overlay -->
+    <div class="modal-overlay" id="dashboard-modal" style="display:none;">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h3><i class="fa-solid fa-chart-column"></i> Assembly Metrics & Statistics</h3>
+                <button class="modal-close" id="btn-close-dashboard"><i class="fa-solid fa-xmark"></i></button>
+            </header>
+            
+            <div class="modal-body">
+                <!-- Summary cards -->
+                <div class="dashboard-stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-gears"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Parts Count</span>
+                            <strong class="stat-val" id="stat-total-parts">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-weight-hanging"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Assembly Total Weight</span>
+                            <strong class="stat-val" id="stat-total-weight">0.00 <span class="unit-sub">g</span></strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-fill-drip"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Material Volume</span>
+                            <strong class="stat-val" id="stat-total-volume">0.00 <span class="unit-sub">cm³</span></strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">B-Rep Total Faces</span>
+                            <strong class="stat-val" id="stat-total-faces">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-metrology-details">
+                    <div class="metrology-box">
+                        <h4><i class="fa-solid fa-box-open"></i> Extents bounding box envelope</h4>
+                        <p class="font-mono" id="stat-bbox">Width X: 0.00 mm | Depth Y: 0.00 mm | Height Z: 0.00 mm</p>
+                    </div>
+                </div>
+
+                <!-- Charts layout -->
+                <div class="dashboard-charts-layout">
+                    <div class="chart-container">
+                        <h5>Material Distribution (by Parts Count)</h5>
+                        <canvas id="chart-material-dist"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h5>Component Mass Histogram (g)</h5>
+                        <canvas id="chart-weight-dist"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js and core modules via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- App JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
