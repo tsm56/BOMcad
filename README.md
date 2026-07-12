@@ -54,9 +54,23 @@ graph TD
 │   ├── index.css          # Modern slate-styled dashboard interface
 │   ├── app.js             # Visual rendering & BOM interactivity controller
 │   └── models/            # Temporary storage for generated WebGL GLB models (Git-ignored)
+├── samples/               # Sample CAD files for user testing (IGES format)
 ├── uploads/               # Temporary CAD files (Git-ignored)
 └── reports/               # Generated reports in CSV, XLSX, PDF (Git-ignored)
 ```
+
+---
+
+## 📥 Test Samples
+
+To help you get started testing the application quickly, we have provided some sample IGES CAD models inside the [samples/](file:///c:/Users/Tanishq/OneDrive/Desktop/3d%20cad%20analyzer/samples) folder:
+
+*   **`cube_with_hole.igs`**: A basic solid cube ($20 \times 20 \times 20\text{ mm}$) featuring a center vertical hole. Great for verifying standard geometric calculations.
+*   **`simple_bracket.igs`**: A typical structural L-bracket ($40 \times 20 \text{ mm}$ base, $30\text{ mm}$ upright). Ideal for checking multi-axis bounds and volumes.
+*   **`assembly_sample.igs`**: A multi-component assembly containing a box solid and a cylinder solid. Perfect for testing assembly breakdowns, multi-part interactive listing, and distinct color rendering.
+
+Feel free to download any of these files and upload them to the web interface to verify analysis features!
+
 
 ---
 
