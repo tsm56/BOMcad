@@ -21,3 +21,15 @@ static/models/*.gltf
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Environment and secrets
+.env
+
+# Large binary CAD files
+*.sldprt
+*.sldasm
+*.catpart
+*.catproduct
+*.prt
+*.asm
+*.ipt

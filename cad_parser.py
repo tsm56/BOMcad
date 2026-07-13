@@ -372,6 +372,26 @@ def analyze_mesh_topology(mesh):
 
     return result
 
+def _convert_via_onshape(file_path):
+    """
+    Convert a proprietary CAD file (.sldprt, .catpart, etc.) to STEP
+    via the Onshape cloud translation service.
+    Returns the path to a temporary STEP file.
+    """
+    import tempfile
+    from onshape_client import convert_cad_via_onshape
+
+    tmp_dir = tempfile.mkdtemp(prefix="onshape_")
+    step_filename = os.path.splitext(os.path.basename(file_path))[0] + ".step"
+    step_path = os.path.join(tmp_dir, step_filename)
+
+    convert_cad_via_onshape(file_path, step_path)
+    return step_path
+
+
+# Formats that require Onshape conversion before B-Rep analysis
+ONSHAPE_FORMATS = {'.sldprt', '.sldasm', '.catpart', '.catproduct', '.prt', '.asm', '.ipt'}
+
 def parse_cad_file(file_path, glb_path, density_g_cm3=7.85):
     """
     Main parser entrypoint. Automatically detects extension and parses.
@@ -379,13 +399,19 @@ def parse_cad_file(file_path, glb_path, density_g_cm3=7.85):
     Returns: (summary, parts_data)
     """
     ext = os.path.splitext(file_path)[1].lower()
-    
-    if ext in ['.step', '.stp', '.iges', '.igs']:
+
+    if ext in ONSHAPE_FORMATS:
+        step_path = _convert_via_onshape(file_path)
+        return parse_brep_cad(step_path, glb_path, '.step', density_g_cm3)
+    elif ext in ['.step', '.stp', '.iges', '.igs']:
         return parse_brep_cad(file_path, glb_path, ext, density_g_cm3)
     elif ext in ['.stl', '.obj', '.gltf', '.glb']:
         return parse_mesh_cad(file_path, glb_path, density_g_cm3)
     else:
-        raise ValueError(f"Unsupported format '{ext}'. Please upload STEP, IGES, STL, OBJ, or GLTF/GLB files.")
+        raise ValueError(
+            f"Unsupported format '{ext}'. Please upload STEP, IGES, STL, OBJ, GLTF/GLB, "
+            f"or proprietary formats (.sldprt, .catpart, .sldasm, .catproduct) with Onshape API configured."
+        )
 
 def parse_brep_cad(file_path, glb_path, ext, density_g_cm3):
     """Parses B-Rep files (STEP, IGES) using OpenCascade/CadQuery"""
