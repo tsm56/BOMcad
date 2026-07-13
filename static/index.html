@@ -33,6 +33,9 @@
             </div>
             
             <div class="header-actions">
+                <button class="btn btn-icon" id="btn-theme-toggle" title="Toggle Light/Dark Theme">
+                    <i class="fa-solid fa-sun" id="theme-icon"></i>
+                </button>
                 <button class="btn btn-secondary" id="btn-toggle-dashboard">
                     <i class="fa-solid fa-chart-pie"></i> Metrics Dashboard
                 </button>
@@ -262,6 +265,55 @@
                                 <div class="bbox-cell"><span>Vertices:</span> <strong id="insp-vertices">0</strong></div>
                             </div>
                         </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Topology Intelligence Section -->
+                        <div class="inspector-section-nested">
+                            <h4 class="nested-title"><i class="fa-solid fa-microscope"></i> Topology Intelligence</h4>
+                            <div class="topology-grid">
+                                <div class="topo-cell topo-hole">
+                                    <i class="fa-solid fa-circle-dot"></i>
+                                    <div class="topo-detail">
+                                        <span class="topo-label">Holes</span>
+                                        <strong class="topo-val" id="insp-holes">0</strong>
+                                    </div>
+                                </div>
+                                <div class="topo-cell topo-bend">
+                                    <i class="fa-solid fa-arrows-spin"></i>
+                                    <div class="topo-detail">
+                                        <span class="topo-label">Bends</span>
+                                        <strong class="topo-val" id="insp-bends">0</strong>
+                                    </div>
+                                </div>
+                                <div class="topo-cell topo-shell">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                    <div class="topo-detail">
+                                        <span class="topo-label">Shells</span>
+                                        <strong class="topo-val" id="insp-shells">0</strong>
+                                    </div>
+                                </div>
+                                <div class="topo-cell topo-genus">
+                                    <i class="fa-solid fa-ring"></i>
+                                    <div class="topo-detail">
+                                        <span class="topo-label">Genus</span>
+                                        <strong class="topo-val" id="insp-genus">0</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hole Details -->
+                            <div id="insp-hole-details" style="display:none; margin-top: 0.6rem;">
+                                <span class="nested-title" style="margin-bottom: 0.3rem;"><i class="fa-solid fa-circle-dot"></i> Hole Details</span>
+                                <div id="insp-hole-list" class="topo-detail-list"></div>
+                            </div>
+
+                            <!-- Face Type Breakdown -->
+                            <div id="insp-face-types-section" style="margin-top: 0.6rem;">
+                                <span class="nested-title" style="margin-bottom: 0.3rem;"><i class="fa-solid fa-shapes"></i> Face Type Breakdown</span>
+                                <div id="insp-face-type-bars" class="topo-bars"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -351,6 +403,20 @@
                         </div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-circle-dot"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Holes</span>
+                            <strong class="stat-val" id="stat-total-holes">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-arrows-spin"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Bends</span>
+                            <strong class="stat-val" id="stat-total-bends">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
                         <div class="stat-icon"><i class="fa-solid fa-fill-drip"></i></div>
                         <div class="stat-details">
                             <span class="stat-label">Total Material Volume</span>
@@ -362,6 +428,20 @@
                         <div class="stat-details">
                             <span class="stat-label">B-Rep Total Faces</span>
                             <strong class="stat-val" id="stat-total-faces">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-shapes"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Face Type Diversity</span>
+                            <strong class="stat-val" id="stat-face-diversity">0 types</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-ring"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Genus</span>
+                            <strong class="stat-val" id="stat-total-genus">0</strong>
                         </div>
                     </div>
                 </div>

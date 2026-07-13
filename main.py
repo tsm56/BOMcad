@@ -133,26 +133,49 @@ async def export_csv(file_uuid: str):
         raise HTTPException(status_code=404, detail="Analysis session not found.")
         
     session = ANALYSIS_STORE[file_uuid]
-    df = pd.DataFrame(session["parts"])
+    raw = session["parts"]
     
-    # Select and rename columns for presentation
-    columns_map = {
-        "part_index": "Part Index",
-        "name": "Component Name",
-        "material": "Material",
-        "density": "Density (g/cm³)",
-        "volume_cm3": "Volume (cm³)",
-        "area_cm2": "Surface Area (cm²)",
-        "bbox_x_mm": "Length X (mm)",
-        "bbox_y_mm": "Width Y (mm)",
-        "bbox_z_mm": "Height Z (mm)",
-        "mass_g": "Mass (g)",
-        "com_x": "COM X (mm)",
-        "com_y": "COM Y (mm)",
-        "com_z": "COM Z (mm)",
-        "type": "Geometry Type"
-    }
-    df = df[list(columns_map.keys())].rename(columns=columns_map)
+    # Flatten topology for CSV
+    rows = []
+    for p in raw:
+        topo = p.get("topology", {})
+        face_types = topo.get("face_types", {})
+        edge_types = topo.get("edge_types", {})
+        through_holes = topo.get("through_holes", [])
+        hole_descs = "; ".join(
+            f"{h.get('type','hole')} D{h['diameter_mm']}mm" for h in through_holes
+        ) if through_holes else ""
+        face_desc = ", ".join(f"{k}:{v}" for k, v in sorted(face_types.items(), key=lambda x: -x[1])) if face_types else ""
+        edge_desc = ", ".join(f"{k}:{v}" for k, v in sorted(edge_types.items(), key=lambda x: -x[1])) if edge_types else ""
+        
+        rows.append({
+            "Part Index": p["part_index"],
+            "Component Name": p["name"],
+            "Material": p["material"],
+            "Density (g/cm³)": p["density"],
+            "Volume (cm³)": p["volume_cm3"],
+            "Surface Area (cm²)": p["area_cm2"],
+            "Mass (g)": p["mass_g"],
+            "Holes": topo.get("holes", 0),
+            "Bends": topo.get("bends", 0),
+            "Genus": topo.get("genus", 0),
+            "Shells": topo.get("shells", 1),
+            "Faces": p.get("faces", 0),
+            "Edges": p.get("edges", 0),
+            "Vertices": p.get("vertices", 0),
+            "Face Types": face_desc,
+            "Edge Types": edge_desc,
+            "Hole Details": hole_descs,
+            "Length X (mm)": p["bbox_x_mm"],
+            "Width Y (mm)": p["bbox_y_mm"],
+            "Height Z (mm)": p["bbox_z_mm"],
+            "COM X (mm)": p["com_x"],
+            "COM Y (mm)": p["com_y"],
+            "COM Z (mm)": p["com_z"],
+            "Geometry Type": p["type"]
+        })
+    
+    df = pd.DataFrame(rows)
     
     csv_path = os.path.join(REPORTS_DIR, f"BOM_{file_uuid}.csv")
     df.to_csv(csv_path, index=False)
@@ -169,42 +192,76 @@ async def export_excel(file_uuid: str):
         raise HTTPException(status_code=404, detail="Analysis session not found.")
         
     session = ANALYSIS_STORE[file_uuid]
-    parts = session["parts"]
+    raw = session["parts"]
     summary = session["summary"]
     
-    # 1. Create Parts Dataframe
-    df_parts = pd.DataFrame(parts)
-    columns_map = {
-        "part_index": "Part Index",
-        "name": "Component Name",
-        "material": "Material",
-        "density": "Density (g/cm³)",
-        "volume_cm3": "Volume (cm³)",
-        "area_cm2": "Surface Area (cm²)",
-        "bbox_x_mm": "Length X (mm)",
-        "bbox_y_mm": "Width Y (mm)",
-        "bbox_z_mm": "Height Z (mm)",
-        "mass_g": "Mass (g)",
-        "com_x": "COM X (mm)",
-        "com_y": "COM Y (mm)",
-        "com_z": "COM Z (mm)",
-        "type": "Geometry Type"
-    }
-    df_parts = df_parts[list(columns_map.keys())].rename(columns=columns_map)
+    # 1. Create Parts Dataframe with topology
+    rows = []
+    for p in raw:
+        topo = p.get("topology", {})
+        face_types = topo.get("face_types", {})
+        edge_types = topo.get("edge_types", {})
+        through_holes = topo.get("through_holes", [])
+        hole_descs = "; ".join(
+            f"{h.get('type','hole')} D{h['diameter_mm']}mm" for h in through_holes
+        ) if through_holes else ""
+        face_desc = ", ".join(f"{k}:{v}" for k, v in sorted(face_types.items(), key=lambda x: -x[1])) if face_types else ""
+        edge_desc = ", ".join(f"{k}:{v}" for k, v in sorted(edge_types.items(), key=lambda x: -x[1])) if edge_types else ""
+        
+        rows.append({
+            "Part Index": p["part_index"],
+            "Component Name": p["name"],
+            "Material": p["material"],
+            "Density (g/cm³)": p["density"],
+            "Volume (cm³)": p["volume_cm3"],
+            "Surface Area (cm²)": p["area_cm2"],
+            "Mass (g)": p["mass_g"],
+            "Holes": topo.get("holes", 0),
+            "Bends": topo.get("bends", 0),
+            "Genus": topo.get("genus", 0),
+            "Shells": topo.get("shells", 1),
+            "Faces": p.get("faces", 0),
+            "Edges": p.get("edges", 0),
+            "Vertices": p.get("vertices", 0),
+            "Face Types": face_desc,
+            "Edge Types": edge_desc,
+            "Hole Details": hole_descs,
+            "Length X (mm)": p["bbox_x_mm"],
+            "Width Y (mm)": p["bbox_y_mm"],
+            "Height Z (mm)": p["bbox_z_mm"],
+            "COM X (mm)": p["com_x"],
+            "COM Y (mm)": p["com_y"],
+            "COM Z (mm)": p["com_z"],
+            "Geometry Type": p["type"]
+        })
     
-    # 2. Create Summary Dataframe
+    df_parts = pd.DataFrame(rows)
+    
+    # 2. Create Summary Dataframe with topology
+    ft = summary.get("face_type_summary", {})
+    et = summary.get("edge_type_summary", {})
+    ft_desc = ", ".join(f"{k}:{v}" for k, v in sorted(ft.items(), key=lambda x: -x[1])) if ft else ""
+    et_desc = ", ".join(f"{k}:{v}" for k, v in sorted(et.items(), key=lambda x: -x[1])) if et else ""
+    
     summary_data = {
         "Metric": [
             "File Name", "CAD Format", "Total Assembly Volume", 
             "Total Assembly Area", "Outer Envelope Length (X)", 
             "Outer Envelope Width (Y)", "Outer Envelope Height (Z)", 
-            "Total Estimated Mass", "Total Components/Parts"
+            "Total Estimated Mass", "Total Components/Parts",
+            "Total Holes", "Total Bends", "Total Genus",
+            "Total Shells", "Total Wires",
+            "Assembly Face Types", "Assembly Edge Types"
         ],
         "Value": [
             summary["file_name"], summary["format"], f"{summary['total_volume_cm3']} cm³",
             f"{summary['total_area_cm2']} cm²", f"{summary['bbox_x_mm']} mm",
             f"{summary['bbox_y_mm']} mm", f"{summary['bbox_z_mm']} mm",
-            f"{summary['total_mass_g']} g", summary["num_parts"]
+            f"{summary['total_mass_g']} g", summary["num_parts"],
+            summary.get("total_holes", 0), summary.get("total_bends", 0),
+            summary.get("total_genus", 0), summary.get("total_shells", 0),
+            summary.get("total_wires", 0),
+            ft_desc, et_desc
         ]
     }
     df_summary = pd.DataFrame(summary_data)

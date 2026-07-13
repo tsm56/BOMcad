@@ -25,6 +25,141 @@
     --bottom-panel-height: 240px;
 }
 
+/* Light Theme Override */
+body.light-theme {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-sidebar: #f1f5f9;
+    --bg-card: rgba(241, 245, 249, 0.85);
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(99, 102, 241, 0.4);
+    
+    --accent-indigo: #4f46e5;
+    --accent-purple: #7c3aed;
+    --accent-emerald: #059669;
+    --accent-neon: #0891b2;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+}
+
+body.light-theme .app-header {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+body.light-theme .brand-text h1 {
+    background: linear-gradient(135deg, #0f172a 60%, #475569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body.light-theme .header-status {
+    background: rgba(241, 245, 249, 0.7);
+}
+
+body.light-theme .btn-secondary {
+    background-color: rgba(241, 245, 249, 0.8);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+body.light-theme .btn-secondary:hover {
+    background-color: rgba(226, 232, 240, 0.9);
+    color: var(--text-primary);
+}
+
+body.light-theme .dropzone {
+    background: rgba(241, 245, 249, 0.5);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .dropzone:hover, body.light-theme .dropzone.dragover {
+    background: rgba(99, 102, 241, 0.04);
+}
+
+body.light-theme .dropdown-menu {
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+body.light-theme .dropdown-menu a:hover {
+    background-color: rgba(99, 102, 241, 0.06);
+}
+
+body.light-theme .floating-controls {
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .property-cell {
+    background: rgba(241, 245, 249, 0.6);
+}
+
+body.light-theme .property-cell:last-child {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(168, 85, 247, 0.02) 100%);
+}
+
+body.light-theme .bbox-cell {
+    background: rgba(241, 245, 249, 0.5);
+}
+
+body.light-theme .parts-table th {
+    background-color: rgba(241, 245, 249, 0.6);
+}
+
+body.light-theme .parts-table tbody tr:hover {
+    background-color: rgba(99, 102, 241, 0.03);
+}
+
+body.light-theme .parts-table tbody tr.active {
+    background-color: rgba(99, 102, 241, 0.06);
+}
+
+body.light-theme .viewer-overlay {
+    background: rgba(248, 250, 252, 0.88);
+}
+
+body.light-theme .modal-overlay {
+    background: rgba(15, 23, 42, 0.3);
+}
+
+body.light-theme .modal-card {
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .stat-card {
+    background: rgba(241, 245, 249, 0.5);
+}
+
+body.light-theme .chart-container {
+    background: rgba(241, 245, 249, 0.4);
+}
+
+body.light-theme .dashboard-metrology-details {
+    background: rgba(241, 245, 249, 0.5);
+}
+
+body.light-theme .form-select, body.light-theme .form-input {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+body.light-theme #table-search-input {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+body.light-theme .spinner-loader {
+    border-color: rgba(79, 70, 229, 0.15);
+}
+
+body.light-theme .point-coord span {
+    background: rgba(0, 0, 0, 0.03);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -1059,7 +1194,7 @@ body {
 .dashboard-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    gap: 0.85rem;
 }
 
 .stat-card {
@@ -1087,6 +1222,10 @@ body {
 .stat-card:nth-child(2) .stat-icon { color: var(--accent-purple); background: rgba(168, 85, 247, 0.08); }
 .stat-card:nth-child(3) .stat-icon { color: var(--accent-emerald); background: rgba(16, 185, 129, 0.08); }
 .stat-card:nth-child(4) .stat-icon { color: var(--accent-neon); background: rgba(6, 118, 212, 0.08); }
+.stat-card:nth-child(5) .stat-icon { color: #f59e0b; background: rgba(245, 158, 11, 0.08); }
+.stat-card:nth-child(6) .stat-icon { color: var(--accent-indigo); background: rgba(99, 102, 241, 0.08); }
+.stat-card:nth-child(7) .stat-icon { color: var(--accent-purple); background: rgba(168, 85, 247, 0.08); }
+.stat-card:nth-child(8) .stat-icon { color: var(--accent-neon); background: rgba(6, 118, 212, 0.08); }
 
 .stat-details {
     display: flex;
@@ -1267,5 +1406,181 @@ body {
 
 .delta-row span span {
     color: var(--text-secondary);
+}
+
+/* 12. Theme Toggle Button */
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9rem;
+}
+
+.btn-icon:hover {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--accent-indigo);
+    border-color: var(--border-hover);
+}
+
+body.light-theme .btn-icon {
+    background: rgba(241, 245, 249, 0.8);
+    color: var(--text-muted);
+}
+
+body.light-theme .btn-icon:hover {
+    color: var(--accent-indigo);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+/* 13. Topology Intelligence Grid */
+.topology-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.topo-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(30, 41, 59, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.55rem 0.65rem;
+}
+
+body.light-theme .topo-cell {
+    background: rgba(241, 245, 249, 0.6);
+}
+
+.topo-cell i {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.topo-hole i { color: var(--accent-indigo); }
+.topo-bend i { color: var(--accent-purple); }
+.topo-shell i { color: var(--accent-emerald); }
+.topo-genus i { color: var(--accent-neon); }
+
+.topo-detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.topo-label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.topo-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+/* Topology detail list */
+.topo-detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.topo-detail-item {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 6px;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.7rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+body.light-theme .topo-detail-item {
+    background: rgba(99, 102, 241, 0.04);
+    border-color: rgba(99, 102, 241, 0.12);
+}
+
+.topo-detail-item .hole-label {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.topo-detail-item .hole-val {
+    font-family: var(--font-mono);
+    color: var(--accent-indigo);
+    font-weight: 700;
+}
+
+/* Face type bar visualization */
+.topo-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+}
+
+.topo-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.topo-bar-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    min-width: 70px;
+    text-transform: capitalize;
+}
+
+.topo-bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+body.light-theme .topo-bar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.topo-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.topo-bar-fill.planar { background: var(--accent-indigo); }
+.topo-bar-fill.cylindrical { background: var(--accent-purple); }
+.topo-bar-fill.conical { background: var(--accent-neon); }
+.topo-bar-fill.spherical { background: var(--accent-emerald); }
+.topo-bar-fill.toroidal { background: #f59e0b; }
+.topo-bar-fill.freeform { background: #ef4444; }
+.topo-bar-fill.revolution { background: #ec4899; }
+.topo-bar-fill.extrusion { background: #14b8a6; }
+.topo-bar-fill.curved { background: var(--accent-purple); }
+.topo-bar-fill.other { background: #64748b; }
+
+.topo-bar-count {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    min-width: 28px;
+    text-align: right;
 }
 

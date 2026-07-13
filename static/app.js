@@ -28,6 +28,7 @@ let activeUuid = null;
 let activeSummary = {};
 let activeParts = [];
 let selectedPartIndex = null;
+let currentTheme = localStorage.getItem('titancad-theme') || 'dark';
 
 // Datatable Parameters
 let currentPage = 1;
@@ -56,6 +57,13 @@ const MATERIAL_DENSITIES = {
 
 // Initialize Application on Page Load
 document.addEventListener("DOMContentLoaded", () => {
+    // Apply saved theme
+    if (currentTheme === 'light') {
+        document.body.classList.add('light-theme');
+        const icon = document.getElementById('theme-icon');
+        if (icon) { icon.className = 'fa-solid fa-moon'; }
+    }
+    
     initThree();
     setupEventListeners();
     setupDropzone();
@@ -75,7 +83,7 @@ function initThree() {
 
     // Create Scene
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x090d16); // Match app dark background
+    scene.background = new THREE.Color(currentTheme === 'light' ? 0xf8fafc : 0x090d16);
 
     // Perspective Camera
     camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000);
@@ -554,6 +562,9 @@ function selectPart(partIndex) {
         document.getElementById("insp-density-input").value = part.density;
     }
 
+    // Update topology intelligence section
+    updateTopologyInspector(part);
+
     // Highlight row in bottoms table ledger
     document.querySelectorAll("#parts-ledger-tbody tr").forEach(row => {
         row.classList.remove("active");
@@ -903,6 +914,16 @@ function openDashboard() {
     document.getElementById("stat-total-volume").innerHTML = `${activeSummary.total_volume_cm3.toLocaleString()} <span class="unit-sub">cm³</span>`;
     document.getElementById("stat-total-faces").innerText = activeSummary.faces_count.toLocaleString();
     document.getElementById("stat-bbox").innerText = `Length X: ${activeSummary.bbox_x_mm} mm | Width Y: ${activeSummary.bbox_y_mm} mm | Height Z: ${activeSummary.bbox_z_mm} mm`;
+    
+    // Topology stats
+    document.getElementById("stat-total-holes").innerText = (activeSummary.total_holes || 0).toLocaleString();
+    document.getElementById("stat-total-bends").innerText = (activeSummary.total_bends || 0).toLocaleString();
+    document.getElementById("stat-total-genus").innerText = (activeSummary.total_genus || 0).toLocaleString();
+    
+    // Face type diversity
+    const faceTypeSummary = activeSummary.face_type_summary || {};
+    const faceTypeCount = Object.keys(faceTypeSummary).length;
+    document.getElementById("stat-face-diversity").innerText = `${faceTypeCount} type${faceTypeCount !== 1 ? 's' : ''}`;
 
     // Process material distribution values
     const materialCounts = {};
@@ -992,7 +1013,91 @@ function openDashboard() {
     });
 }
 
-// 14. Add UI event handlers
+// 14. Topology Intelligence Display
+function updateTopologyInspector(part) {
+    const topo = part.topology;
+    if (!topo) {
+        // Hide topology section if no data
+        document.getElementById("insp-holes").textContent = "0";
+        document.getElementById("insp-bends").textContent = "0";
+        document.getElementById("insp-shells").textContent = "0";
+        document.getElementById("insp-genus").textContent = "0";
+        document.getElementById("insp-hole-details").style.display = "none";
+        document.getElementById("insp-face-type-bars").innerHTML = "";
+        return;
+    }
+
+    // Update grid values
+    document.getElementById("insp-holes").textContent = topo.holes || 0;
+    document.getElementById("insp-bends").textContent = topo.bends || 0;
+    document.getElementById("insp-shells").textContent = topo.shells || 0;
+    document.getElementById("insp-genus").textContent = topo.genus || 0;
+
+    // Hole details
+    const holeDetailsEl = document.getElementById("insp-hole-details");
+    const holeListEl = document.getElementById("insp-hole-list");
+    if (topo.through_holes && topo.through_holes.length > 0) {
+        holeDetailsEl.style.display = "block";
+        holeListEl.innerHTML = topo.through_holes.map((h, i) => {
+            const label = h.type === "blind_or_counterbore" ? "Blind/Counterbore" : `Through-Hole ${i + 1}`;
+            return `<div class="topo-detail-item">
+                <span class="hole-label">${label}</span>
+                <span class="hole-val">D ${h.diameter_mm} mm</span>
+            </div>`;
+        }).join("");
+    } else {
+        holeDetailsEl.style.display = "none";
+    }
+
+    // Face type breakdown bars
+    const faceTypesEl = document.getElementById("insp-face-type-bars");
+    const faceTypes = topo.face_types || {};
+    const totalFaces = Object.values(faceTypes).reduce((a, b) => a + b, 0);
+    
+    if (totalFaces > 0 && Object.keys(faceTypes).length > 0) {
+        const maxCount = Math.max(...Object.values(faceTypes));
+        faceTypesEl.innerHTML = Object.entries(faceTypes)
+            .sort((a, b) => b[1] - a[1])
+            .map(([type, count]) => {
+                const pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                const barClass = type.replace(/\s+/g, '');
+                return `<div class="topo-bar-row">
+                    <span class="topo-bar-label">${type}</span>
+                    <div class="topo-bar-track">
+                        <div class="topo-bar-fill ${barClass}" style="width: ${pct}%"></div>
+                    </div>
+                    <span class="topo-bar-count">${count}</span>
+                </div>`;
+            }).join("");
+    } else {
+        faceTypesEl.innerHTML = '<span style="font-size: 0.65rem; color: var(--text-muted);">No face type data available</span>';
+    }
+}
+
+// 15. Theme Toggle
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-theme');
+    currentTheme = isLight ? 'light' : 'dark';
+    localStorage.setItem('titancad-theme', currentTheme);
+    
+    const icon = document.getElementById('theme-icon');
+    icon.className = isLight ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+    
+    // Update Three.js background and grid colors based on theme
+    if (scene) {
+        scene.background = new THREE.Color(isLight ? 0xf8fafc : BG_STYLES[currentBgIndex].bg);
+    }
+    if (gridHelper) {
+        scene.remove(gridHelper);
+        const gridColor = isLight ? 0xd1d5db : BG_STYLES[currentBgIndex].grid;
+        const gridMainColor = isLight ? 0x94a3b8 : BG_STYLES[currentBgIndex].gridMain;
+        gridHelper = new THREE.GridHelper(300, 60, gridMainColor, gridColor);
+        gridHelper.position.y = -0.1;
+        scene.add(gridHelper);
+    }
+}
+
+// 16. Add UI event handlers
 function setupEventListeners() {
     // 3D Canvas selection raycast listener
     canvas.addEventListener("click", onCanvasClick);
@@ -1190,4 +1295,7 @@ function setupEventListeners() {
     // Measurement tool listeners
     document.getElementById("tool-measure").addEventListener("click", toggleMeasureMode);
     document.getElementById("btn-clear-measurement").addEventListener("click", clearMeasurementData);
+
+    // Theme toggle listener
+    document.getElementById("btn-theme-toggle").addEventListener("click", toggleTheme);
 }
